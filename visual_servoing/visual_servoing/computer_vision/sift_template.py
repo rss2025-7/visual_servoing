@@ -36,7 +36,7 @@ def cd_sift_ransac(img, template):
 				(x1, y1) is the bottom left of the bbox and (x2, y2) is the top right of the bbox
 	"""
 	# Minimum number of matching features
-	MIN_MATCH = 10 # Adjust this value as needed
+	MIN_MATCH = 4 # Adjust this value as needed
 	# Create SIFT
 	sift = cv2.xfeatures2d.SIFT_create()
 
@@ -67,9 +67,7 @@ def cd_sift_ransac(img, template):
 		pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
 
 		########## YOUR CODE STARTS HERE ##########
-
-		x_min = y_min = x_max = y_max = 0
-
+		x_min, x_max, y_min, y_max = 0, 0, 0, 0
 		########### YOUR CODE ENDS HERE ###########
 
 		# Return bounding box
@@ -95,7 +93,6 @@ def cd_template_matching(img, template):
 	# Perform Canny Edge detection on test image
 	grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	img_canny = cv2.Canny(grey_img, 50, 200)
-
 	# Get dimensions of template
 	(img_height, img_width) = img_canny.shape[:2]
 
@@ -117,7 +114,29 @@ def cd_template_matching(img, template):
 
 		# Remember to resize the bounding box using the highest scoring scale
 		# x1,y1 pixel will be accurate, but x2,y2 needs to be correctly scaled
-		bounding_box = ((0,0),(0,0))
-		########### YOUR CODE ENDS HERE ###########
+
+		# use openCV template matching algorithm, can adjust metric to get different scores
+		result = cv2.matchTemplate(img_canny, resized_template, cv2.TM_CCOEFF_NORMED)
+
+		# min match not needed
+		_, temp_max, _, max_loc = cv2.minMaxLoc(result)
+
+		if best_match is None or temp_max > max_val:
+			# save coords of best match, the current scale, and the maximum match value
+			best_match, best_scale, max_val = max_loc, scale, temp_max
+
+	startX, startY, endX, endY = 0, 0, 0, 0
+	if best_match is not None:
+		startX, startY = best_match
+		endX = int(startX + template_canny.shape[1] * best_scale)
+		endY = int(startY + template_canny.shape[0] * best_scale)
+
+	bounding_box = ((startX, startY), (endX, endY))
+
+	# visualize bounding box
+	# cv2.rectangle(img, (startX,startY), (endX,endY), (0,0,255), 2)
+	# image_print(img)
+
+	########### YOUR CODE ENDS HERE ###########
 
 	return bounding_box
