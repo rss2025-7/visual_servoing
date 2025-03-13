@@ -28,15 +28,16 @@ def image_print(img):
 
 def cd_sift_ransac(img, template):
 	"""
-	Implement the cone detection using SIFT + RANSAC algorithm
+	Implement the cone detection using SIFT + RANSAC algorithm.
 	Input:
 		img: np.3darray; the input image with a cone to be detected
 	Return:
-		bbox: ((x1, y1), (x2, y2)); the bounding box of the cone, unit in px
-				(x1, y1) is the bottom left of the bbox and (x2, y2) is the top right of the bbox
+		bbox: ((x1, y1), (x2, y2)); the bounding box in image coordinates (Y increasing downwards),
+			where (x1, y1) is the top-left pixel of the box
+			and (x2, y2) is the bottom-right pixel of the box.
 	"""
 	# Minimum number of matching features
-	MIN_MATCH = 4 # Adjust this value as needed
+	MIN_MATCH = 10 # Adjust this value as needed
 	# Create SIFT
 	sift = cv2.xfeatures2d.SIFT_create()
 
@@ -67,8 +68,15 @@ def cd_sift_ransac(img, template):
 		pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
 
 		########## YOUR CODE STARTS HERE ##########
-		x_min, x_max, y_min, y_max = 0, 0, 0, 0
+		dst = cv2.perspectiveTransform(pts, M)
+		dst = dst.squeeze()
+		x_min, x_max = int(np.min(dst[:,0])), int(np.max(dst[:,0]))
+		y_min, y_max = int(np.min(dst[:,1])), int(np.max(dst[:,1]))
 		########### YOUR CODE ENDS HERE ###########
+
+		# bounding box
+		# cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0,0,255), 2)
+		# image_print(img)
 
 		# Return bounding box
 		return ((x_min, y_min), (x_max, y_max))
@@ -81,13 +89,13 @@ def cd_sift_ransac(img, template):
 
 def cd_template_matching(img, template):
 	"""
-	Implement the cone detection using template matching algorithm
-	Input:
-		img: np.3darray; the input image with a cone to be detected
-	Return:
-		bbox: ((x1, y1), (x2, y2)); the bounding box of the cone, unit in px
-				(x1, y1) is the bottom left of the bbox and (x2, y2) is the top right of the bbox
-	"""
+    Implement the cone detection using template matching algorithm.
+    Input:
+        img: np.3darray; the input image with a cone to be detected
+    Return:
+        bbox: ((x1, y1), (x2, y2)); the bounding box in px (Y increases downward),
+            where (x1, y1) is the top-left corner and (x2, y2) is the bottom-right corner.
+    """
 	template_canny = cv2.Canny(template, 50, 200)
 
 	# Perform Canny Edge detection on test image
@@ -134,8 +142,8 @@ def cd_template_matching(img, template):
 	bounding_box = ((startX, startY), (endX, endY))
 
 	# visualize bounding box
-	# cv2.rectangle(img, (startX,startY), (endX,endY), (0,0,255), 2)
-	# image_print(img)
+	cv2.rectangle(img, (startX,startY), (endX,endY), (0,0,255), 2)
+	image_print(img)
 
 	########### YOUR CODE ENDS HERE ###########
 
