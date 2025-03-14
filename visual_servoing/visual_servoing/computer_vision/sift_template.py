@@ -70,20 +70,15 @@ def cd_sift_ransac(img, template):
 		# print(pts)
 
 		########## YOUR CODE STARTS HERE ##########
-
-		x_min = y_min = x_max = y_max = 0
 		dst = cv2.perspectiveTransform(pts, M)
-		# print(dst)
-		x_min = int(np.min(dst[:, 0, 0]))
-		x_max = int(np.max(dst[:, 0, 0]))
-		y_min = int(np.min(dst[:, 0, 1]))
-		y_max = int(np.max(dst[:, 0, 1]))
-
-		cv2.rectangle(img, (x_min,y_min), (x_max,y_max), (0,0,255), 2)
-		image_print(img)
-
-
+		dst = dst.squeeze()
+		x_min, x_max = int(np.min(dst[:,0])), int(np.max(dst[:,0]))
+		y_min, y_max = int(np.min(dst[:,1])), int(np.max(dst[:,1]))
 		########### YOUR CODE ENDS HERE ###########
+
+		# bounding box
+		# cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0,0,255), 2)
+		# image_print(img)
 
 		# Return bounding box
 		return ((x_min, y_min), (x_max, y_max))
@@ -104,14 +99,11 @@ def cd_template_matching(img, template):
 		bbox: ((x1, y1), (x2, y2)); the bounding box in px (Y increases downward),
 			where (x1, y1) is the top-left corner and (x2, y2) is the bottom-right corner.
 	"""
-	a = 1
-	
 	template_canny = cv2.Canny(template, 50, 200)
 
 	# Perform Canny Edge detection on test image
 	grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	img_canny = cv2.Canny(grey_img, 50, 200)
-
 	# Get dimensions of template
 	(img_height, img_width) = img_canny.shape[:2]
 
@@ -134,28 +126,30 @@ def cd_template_matching(img, template):
 
 		# Remember to resize the bounding box using the highest scoring scale
 		# x1,y1 pixel will be accurate, but x2,y2 needs to be correctly scaled
-		
 
-		# methods = ['TM_SQDIFF', 'TM_SQDIFF_NORMED']
-		
-		methods = ['TM_CCOEFF_NORMED']
- 
-		for meth in methods:
-			method = getattr(cv2, meth)
-		
-			res = cv2.matchTemplate(img_canny,resized_template,method)
-			min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-			# If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimu
-			if max_val > max_score:
-				max_score = max_val
-				top_left = max_loc
-				bottom_right = (top_left[0] + w, top_left[1] + h)
-				bounding_box = (top_left, bottom_right)
+		# use openCV template matching algorithm, can adjust metric to get different scores
+		result = cv2.matchTemplate(img_canny, resized_template, cv2.TM_CCOEFF_NORMED)
 
-			
-		########### YOUR CODE ENDS HERE ###########
-	cv2.rectangle(img,top_left, bottom_right, 255, 2)
+		# min match not needed
+		_, temp_max, _, max_loc = cv2.minMaxLoc(result)
+
+		if best_match is None or temp_max > max_val:
+			# save coords of best match, the current scale, and the maximum match value
+			best_match, best_scale, max_val = max_loc, scale, temp_max
+
+	startX, startY, endX, endY = 0, 0, 0, 0
+	if best_match is not None:
+		startX, startY = best_match
+		endX = int(startX + template_canny.shape[1] * best_scale)
+		endY = int(startY + template_canny.shape[0] * best_scale)
+
+	bounding_box = ((startX, startY), (endX, endY))
+
+	# visualize bounding box
+	cv2.rectangle(img, (startX,startY), (endX,endY), (0,0,255), 2)
 	image_print(img)
+
+	########### YOUR CODE ENDS HERE ###########
 	return bounding_box
 
 if __name__ == "__main__":
