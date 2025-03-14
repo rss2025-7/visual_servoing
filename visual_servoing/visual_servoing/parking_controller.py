@@ -26,37 +26,82 @@ class ParkingController(Node):
             self.relative_cone_callback, 1)
 
         self.parking_distance = .75 # meters; try playing with this number!
+        self.look_ahead = 0.5
         self.relative_x = 0
         self.relative_y = 0
+        self.wheelbase = 0.2
+        self.waypoints = None
 
         self.get_logger().info("Parking Controller Initialized")
+    
+
+    def find_next_waypoint(self, cone_x, cone_y):
+        look_ahead_distance = self.look_ahead
+        cone_pos = np.array([cone_x, cone_y])
+        distance = np.linalg.norm(cone_pos)
+        if distance <= look_ahead_distance:
+            return cone_pos
+        else:
+            return ((cone_pos / distance) * look_ahead_distance, distance)
+
 
     def relative_cone_callback(self, msg):
         self.relative_x = msg.x_pos
         self.relative_y = msg.y_pos
         drive_cmd = AckermannDriveStamped()
+        
 
         #################################
+        waypoint, cone_dist = self.find_next_waypoint(self.relative_x, self.relative_y)
+        
+        way_x, way_y = waypoint
+        L = self.wheelbase
+        look_ahead = self.look_ahead
+        error_distance = cone_dist - self.parking_distance
+
+        alpha = np.arctan2(way_y, way_x) 
+       
+        if error_distance > 0:
+            velo = 1.0
+            steer_angle = np.arctan2(2*np.sin(alpha)*L, look_ahead)  
+        else:
+            velo = 0.0
+            steer_angle = 0.0
+
+        drive_cmd.header.stamp = self.get_clock().now().to_msg()
+        drive_cmd.header.frame_id = "base_link"
+
+        drive_cmd.drive.steering_angle = steer_angle
+        drive_cmd.drive.steering_angle_velocity = 0.0
+        drive_cmd.drive.speed = velo
+        drive_cmd.drive.acceleration = 0.
+        drive_cmd.drive.jerk = 0.
+        
+
 
         # YOUR CODE HERE
         # Use relative position and your control law to set drive_cmd
 
-        #################################
 
         self.drive_pub.publish(drive_cmd)
-        self.error_publisher()
+        self.error_publisher(error_distance)
 
-    def error_publisher(self):
+    def error_publisher(self, dist):
         """
         Publish the error between the car and the cone. We will view this
         with rqt_plot to plot the success of the controller
         """
-        error_msg = ParkingError()
+        
 
         #################################
 
         # YOUR CODE HERE
         # Populate error_msg with relative_x, relative_y, sqrt(x^2+y^2)
+        error_msg = ParkingError()
+        x, y = self.relative_x, self.relative_y
+        error_msg.x_error = x
+        error_msg.y_error = y
+        error_msg.distance_error = np.sqrt(x**2 + y**2)
 
         #################################
         

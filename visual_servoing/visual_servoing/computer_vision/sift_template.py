@@ -1,3 +1,4 @@
+
 import cv2
 import imutils
 import numpy as np
@@ -28,12 +29,13 @@ def image_print(img):
 
 def cd_sift_ransac(img, template):
 	"""
-	Implement the cone detection using SIFT + RANSAC algorithm
+	Implement the cone detection using SIFT + RANSAC algorithm.
 	Input:
 		img: np.3darray; the input image with a cone to be detected
 	Return:
-		bbox: ((x1, y1), (x2, y2)); the bounding box of the cone, unit in px
-				(x1, y1) is the bottom left of the bbox and (x2, y2) is the top right of the bbox
+		bbox: ((x1, y1), (x2, y2)); the bounding box in image coordinates (Y increasing downwards),
+			where (x1, y1) is the top-left pixel of the box
+			and (x2, y2) is the bottom-right pixel of the box.
 	"""
 	# Minimum number of matching features
 	MIN_MATCH = 10 # Adjust this value as needed
@@ -65,10 +67,21 @@ def cd_sift_ransac(img, template):
 
 		h, w = template.shape
 		pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+		# print(pts)
 
 		########## YOUR CODE STARTS HERE ##########
 
 		x_min = y_min = x_max = y_max = 0
+		dst = cv2.perspectiveTransform(pts, M)
+		# print(dst)
+		x_min = int(np.min(dst[:, 0, 0]))
+		x_max = int(np.max(dst[:, 0, 0]))
+		y_min = int(np.min(dst[:, 0, 1]))
+		y_max = int(np.max(dst[:, 0, 1]))
+
+		cv2.rectangle(img, (x_min,y_min), (x_max,y_max), (0,0,255), 2)
+		image_print(img)
+
 
 		########### YOUR CODE ENDS HERE ###########
 
@@ -80,16 +93,19 @@ def cd_sift_ransac(img, template):
 
 		# Return bounding box of area 0 if no match found
 		return ((0,0), (0,0))
+	
 
 def cd_template_matching(img, template):
 	"""
-	Implement the cone detection using template matching algorithm
+	Implement the cone detection using template matching algorithm.
 	Input:
 		img: np.3darray; the input image with a cone to be detected
 	Return:
-		bbox: ((x1, y1), (x2, y2)); the bounding box of the cone, unit in px
-				(x1, y1) is the bottom left of the bbox and (x2, y2) is the top right of the bbox
+		bbox: ((x1, y1), (x2, y2)); the bounding box in px (Y increases downward),
+			where (x1, y1) is the top-left corner and (x2, y2) is the bottom-right corner.
 	"""
+	a = 1
+	
 	template_canny = cv2.Canny(template, 50, 200)
 
 	# Perform Canny Edge detection on test image
@@ -100,8 +116,9 @@ def cd_template_matching(img, template):
 	(img_height, img_width) = img_canny.shape[:2]
 
 	# Keep track of best-fit match
-	best_match = None
-
+	min_score = float("inf")
+	max_score = -float("inf")
+	bounding_box = ((0,0),(0,0))
 	# Loop over different scales of image
 	for scale in np.linspace(1.5, .5, 50):
 		# Resize the image
@@ -117,7 +134,29 @@ def cd_template_matching(img, template):
 
 		# Remember to resize the bounding box using the highest scoring scale
 		# x1,y1 pixel will be accurate, but x2,y2 needs to be correctly scaled
-		bounding_box = ((0,0),(0,0))
-		########### YOUR CODE ENDS HERE ###########
+		
 
+		# methods = ['TM_SQDIFF', 'TM_SQDIFF_NORMED']
+		
+		methods = ['TM_CCOEFF_NORMED']
+ 
+		for meth in methods:
+			method = getattr(cv2, meth)
+		
+			res = cv2.matchTemplate(img_canny,resized_template,method)
+			min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+			# If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimu
+			if max_val > max_score:
+				max_score = max_val
+				top_left = max_loc
+				bottom_right = (top_left[0] + w, top_left[1] + h)
+				bounding_box = (top_left, bottom_right)
+
+			
+		########### YOUR CODE ENDS HERE ###########
+	cv2.rectangle(img,top_left, bottom_right, 255, 2)
+	image_print(img)
 	return bounding_box
+
+if __name__ == "__main__":
+	pass

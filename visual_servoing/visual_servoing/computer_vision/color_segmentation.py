@@ -35,15 +35,15 @@ def cd_color_segmentation(img, template):
 	########## YOUR CODE STARTS HERE ##########
 
 	bounding_box = ((0,0),(0,0))
-	image_print(img)
+	# image_print(img)
 	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-	image_print(hsv)
+	# image_print(hsv)
 
 	lower_orange = np.array([0, 200, 102]) #0, 220, 170
 	upper_orange = np.array([45, 255, 255])
 
 	mask = cv2.inRange(hsv, lower_orange, upper_orange)
-	image_print(mask)
+	# image_print(mask)
 
 	kernel = np.ones((2, 2), np.uint8)
 	# mask = cv2.erode(mask, kernel, iterations=1)
@@ -68,3 +68,9 @@ def cd_color_segmentation(img, template):
 
 	# Return bounding box
 	return bounding_box
+
+
+
+if __name__ == "__main__":
+	pass
+
