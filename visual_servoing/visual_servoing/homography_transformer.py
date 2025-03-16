@@ -32,13 +32,15 @@ PTS_IMAGE_PLANE = [[393, 207],
 
 ######################################################
 ## DUMMY POINTS -- ENTER YOUR MEASUREMENTS HERE
-PTS_GROUND_PLANE = [[33.07, 5.81],
-                    [45.08, 5.12],
-                    [62.60, -26.97],
-                    [95.51, 3.35]] # dummy points
+FRONT_BUMPER_TO_BACK_AXLE = 42 # in cm
+PTS_GROUND_PLANE = [[69+FRONT_BUMPER_TO_BACK_AXLE, -14.75], # doorstop
+                    [99.5+FRONT_BUMPER_TO_BACK_AXLE, -13], # swiffer
+                    [144+FRONT_BUMPER_TO_BACK_AXLE, 68.5], # battery
+                    [227.6+FRONT_BUMPER_TO_BACK_AXLE, -8.5]] # green
 ######################################################
 
 METERS_PER_INCH = 0.0254
+CONVERSION = 0.01
 
 
 class HomographyTransformer(Node):
@@ -55,7 +57,7 @@ class HomographyTransformer(Node):
         #Initialize data into a homography matrix
 
         np_pts_ground = np.array(PTS_GROUND_PLANE)
-        np_pts_ground = np_pts_ground * METERS_PER_INCH
+        np_pts_ground = np_pts_ground * CONVERSION
         np_pts_ground = np.float32(np_pts_ground[:, np.newaxis, :])
 
         np_pts_image = np.array(PTS_IMAGE_PLANE)
@@ -63,15 +65,15 @@ class HomographyTransformer(Node):
         np_pts_image = np.float32(np_pts_image[:, np.newaxis, :])
 
         self.h, err = cv2.findHomography(np_pts_image, np_pts_ground)
-
+        # self.get_logger().info(f"{self.h}")
         self.timer = self.create_timer(0.1, self.on_timer)
 
         self.get_logger().info("Homography Transformer Initialized")
 
     def on_timer(self):
-        x, y = self.transformUvToXy(177, 176)
+        x, y = self.transformUvToXy(380, 312)
+        self.get_logger().info(f"X: {x} and Y: {y}")
         self.draw_marker(x, y, 'base_link')
-        self.draw_marker(0.0, 0.0, 'base_link')
 
     def cone_detection_callback(self, msg):
         #Extract information from message
