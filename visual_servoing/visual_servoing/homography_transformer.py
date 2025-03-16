@@ -70,8 +70,8 @@ class HomographyTransformer(Node):
 
     def on_timer(self):
         x, y = self.transformUvToXy(177, 176)
-        self.draw_marker(x, y, 'test')
-        self.draw_marker(0.0, 0.0, 'test')
+        self.draw_marker(x, y, 'base_link')
+        self.draw_marker(0.0, 0.0, 'base_link')
 
     def cone_detection_callback(self, msg):
         #Extract information from message
@@ -128,6 +128,8 @@ class HomographyTransformer(Node):
         marker.pose.orientation.w = 1.0
         marker.pose.position.x = cone_x
         marker.pose.position.y = cone_y
+
+        # self.get_logger().info(f"Point Publsihed: {cone_x}, {cone_y}")
         self.marker_pub.publish(marker)
 
 def main(args=None):

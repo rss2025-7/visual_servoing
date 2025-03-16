@@ -43,7 +43,7 @@ def cd_color_segmentation(img, template):
 	upper_orange = np.array([30, 255, 255]) #45, 255, 255
 
 	mask = cv2.inRange(hsv, lower_orange, upper_orange)
-	image_print(mask)
+	# image_print(mask)
 
 	kernel = np.ones((5, 5), np.uint8)
 	# mask = cv2.erode(mask, kernel, iterations=2)
@@ -59,7 +59,7 @@ def cd_color_segmentation(img, template):
 		x, y, w, h = cv2.boundingRect(largest_contour)
 		bounding_box = ((x, y), (x + w, y + h))
 		cv2.rectangle(img, (x,y), (x+w,y+h), (0,0,255), 2)
-		image_print(img)
+		# image_print(img)
 	else:
 		bounding_box = ((0, 0), (0, 0))
 
