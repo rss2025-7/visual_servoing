@@ -21,10 +21,10 @@ from vs_msgs.msg import ConeLocation, ConeLocationPixel
 
 ######################################################
 ## DUMMY POINTS -- ENTER YOUR MEASUREMENTS HERE
-PTS_IMAGE_PLANE = [[-1, -1],
-                   [-1, -1],
-                   [-1, -1],
-                   [-1, -1]] # dummy points
+PTS_IMAGE_PLANE = [[393, 207],
+                   [369, 176],
+                   [176, 177],
+                   [331, 151]] # dummy points
 ######################################################
 
 # PTS_GROUND_PLANE units are in inches
@@ -32,10 +32,10 @@ PTS_IMAGE_PLANE = [[-1, -1],
 
 ######################################################
 ## DUMMY POINTS -- ENTER YOUR MEASUREMENTS HERE
-PTS_GROUND_PLANE = [[-1, -1],
-                    [-1, -1],
-                    [-1, -1],
-                    [-1, -1]] # dummy points
+PTS_GROUND_PLANE = [[33.07, 5.81],
+                    [45.08, 5.12],
+                    [62.60, -26.97],
+                    [95.51, 3.35]] # dummy points
 ######################################################
 
 METERS_PER_INCH = 0.0254
@@ -64,7 +64,14 @@ class HomographyTransformer(Node):
 
         self.h, err = cv2.findHomography(np_pts_image, np_pts_ground)
 
+        self.timer = self.create_timer(0.1, self.on_timer)
+
         self.get_logger().info("Homography Transformer Initialized")
+
+    def on_timer(self):
+        x, y = self.transformUvToXy(177, 176)
+        self.draw_marker(x, y, 'test')
+        self.draw_marker(0.0, 0.0, 'test')
 
     def cone_detection_callback(self, msg):
         #Extract information from message
