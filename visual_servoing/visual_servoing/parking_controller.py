@@ -29,8 +29,11 @@ class ParkingController(Node):
         self.look_ahead = 0.5
         self.relative_x = 0
         self.relative_y = 0
-        self.wheelbase = 0.2
+        self.wheelbase = 0.34
+
         self.waypoints = None
+        self.moving_backward = False
+        self.backward_count = 0
 
         self.get_logger().info("Parking Controller Initialized")
     
@@ -40,7 +43,7 @@ class ParkingController(Node):
         cone_pos = np.array([cone_x, cone_y])
         distance = np.linalg.norm(cone_pos)
         if distance <= look_ahead_distance:
-            return cone_pos
+            return cone_pos, distance
         else:
             return ((cone_pos / distance) * look_ahead_distance, distance)
 
@@ -58,15 +61,33 @@ class ParkingController(Node):
         L = self.wheelbase
         look_ahead = self.look_ahead
         error_distance = cone_dist - self.parking_distance
-
+        #print(self.moving_backward)
         alpha = np.arctan2(way_y, way_x) 
-       
-        if error_distance > 0:
-            velo = 1.0
-            steer_angle = np.arctan2(2*np.sin(alpha)*L, look_ahead)  
+
+        if self.moving_backward is False:
+            if error_distance > 0.1:
+                velo = 1.0
+                steer_angle = np.arctan2(2*np.sin(alpha)*L, look_ahead)  
+            else:
+                if np.abs(np.arctan2(self.relative_y, self.relative_x)) > .175: #10 degrees
+                    self.moving_backward = True
+                velo = 0.0
+                steer_angle = 0.0
         else:
-            velo = 0.0
+            velo = -1.0
+            self.backward_count += 1
+            if self.backward_count <= 5:
+                steer_angle = -1*np.sign(way_x)* (0.35) #desired angle in radians
+                # self.get_logger().info(f"steering angle backward: {steer_angle}")
+            elif self.backward_count == 10:
+                # self.get_logger().info(f"count: {self.backward_count}")
+                self.moving_backward = False
+                self.backward_count = 0
             steer_angle = 0.0
+            
+                
+
+            
 
         drive_cmd.header.stamp = self.get_clock().now().to_msg()
         drive_cmd.header.frame_id = "base_link"
