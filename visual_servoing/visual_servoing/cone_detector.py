@@ -50,19 +50,23 @@ class ConeDetector(Node):
         conepx = ConeLocationPixel()
 
         image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
-        bbox = cd_color_segmentation(image, None)
-        bottomv = float(bbox[1][1])
-        bottomu = float(bbox[1][0] + bbox[0][0])//2
-        conepx.u, conepx.v = bottomu, bottomv
+        if not self.LineFollower:
+            bbox = cd_color_segmentation(image, None)
+            bottomv = float(bbox[1][1])
+            bottomu = float(bbox[1][0] + bbox[0][0])//2
+            conepx.u, conepx.v = bottomu, bottomv
 
-
-        self.cone_pub.publish(conepx)
-         # img with bounding box
-        bbox_top_left = bbox[0][0], bbox[0][1]
-        bbox_bot_right = bbox[1][0], bbox[1][1]
-        cv2.rectangle(image, bbox_top_left, bbox_bot_right, (0,0,255), 2)
-        debug_msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
-        self.debug_pub.publish(debug_msg)
+            self.cone_pub.publish(conepx)
+            # img with bounding box
+            bbox_top_left = bbox[0][0], bbox[0][1]
+            bbox_bot_right = bbox[1][0], bbox[1][1]
+            cv2.rectangle(image, bbox_top_left, bbox_bot_right, (0,0,255), 2)
+            debug_msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
+            self.debug_pub.publish(debug_msg)
+        else:
+            conepx = ConeLocationPixel()
+            cv2.rectangle(image, (0,0), (640, 180), [255, 255, 255], -1)
+            cv2.rectangle(image, (0, 275), (640, 360), [255,255,255], -1)
 
 def main(args=None):
     rclpy.init(args=args)
