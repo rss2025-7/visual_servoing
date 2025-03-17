@@ -66,13 +66,13 @@ class HomographyTransformer(Node):
 
         self.h, err = cv2.findHomography(np_pts_image, np_pts_ground)
         # self.get_logger().info(f"{self.h}")
-        self.timer = self.create_timer(0.1, self.on_timer)
+        # self.timer = self.create_timer(0.1, self.on_timer)
 
         self.get_logger().info("Homography Transformer Initialized")
 
     def on_timer(self):
         x, y = self.transformUvToXy(380, 312)
-        self.get_logger().info(f"X: {x} and Y: {y}")
+        # self.get_logger().info(f"X: {x} and Y: {y}")
         self.draw_marker(x, y, 'base_link')
 
     def cone_detection_callback(self, msg):

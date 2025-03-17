@@ -22,7 +22,7 @@ class ParkingController(Node):
         self.drive_pub = self.create_publisher(AckermannDriveStamped, DRIVE_TOPIC, 10)
         self.error_pub = self.create_publisher(ParkingError, "/parking_error", 10)
 
-        self.create_subscription(ConeLocation, "/relative_cone", 
+        self.create_subscription(ConeLocation, "/relative_cone",
             self.relative_cone_callback, 1)
 
         self.parking_distance = .75 # meters; try playing with this number!
@@ -36,7 +36,7 @@ class ParkingController(Node):
         self.backward_count = 0
 
         self.get_logger().info("Parking Controller Initialized")
-    
+
 
     def find_next_waypoint(self, cone_x, cone_y):
         look_ahead_distance = self.look_ahead
@@ -52,42 +52,40 @@ class ParkingController(Node):
         self.relative_x = msg.x_pos
         self.relative_y = msg.y_pos
         drive_cmd = AckermannDriveStamped()
-        
 
         #################################
         waypoint, cone_dist = self.find_next_waypoint(self.relative_x, self.relative_y)
-        
         way_x, way_y = waypoint
         L = self.wheelbase
         look_ahead = self.look_ahead
         error_distance = cone_dist - self.parking_distance
         #print(self.moving_backward)
-        alpha = np.arctan2(way_y, way_x) 
+        alpha = np.arctan2(way_y, way_x)
 
         if self.moving_backward is False:
             if error_distance > 0.1:
-                velo = 1.0
-                steer_angle = np.arctan2(2*np.sin(alpha)*L, look_ahead)  
+                velo = 0.5
+                steer_angle = np.arctan2(2*np.sin(alpha)*L, look_ahead)
             else:
                 if np.abs(np.arctan2(self.relative_y, self.relative_x)) > .175: #10 degrees
                     self.moving_backward = True
                 velo = 0.0
                 steer_angle = 0.0
         else:
-            velo = -1.0
+            velo = -0.5
             self.backward_count += 1
             if self.backward_count <= 5:
                 steer_angle = -1*np.sign(way_x)* (0.35) #desired angle in radians
-                # self.get_logger().info(f"steering angle backward: {steer_angle}")
+                self.get_logger().info(f"steering angle backward: {steer_angle}")
             elif self.backward_count == 10:
-                # self.get_logger().info(f"count: {self.backward_count}")
+                self.get_logger().info(f"count: {self.backward_count}")
                 self.moving_backward = False
                 self.backward_count = 0
             steer_angle = 0.0
-            
-                
 
-            
+
+
+
 
         drive_cmd.header.stamp = self.get_clock().now().to_msg()
         drive_cmd.header.frame_id = "base_link"
@@ -97,7 +95,7 @@ class ParkingController(Node):
         drive_cmd.drive.speed = velo
         drive_cmd.drive.acceleration = 0.
         drive_cmd.drive.jerk = 0.
-        
+
 
 
         # YOUR CODE HERE
@@ -112,7 +110,7 @@ class ParkingController(Node):
         Publish the error between the car and the cone. We will view this
         with rqt_plot to plot the success of the controller
         """
-        
+
 
         #################################
 
@@ -125,7 +123,7 @@ class ParkingController(Node):
         error_msg.distance_error = np.sqrt(x**2 + y**2)
 
         #################################
-        
+
         self.error_pub.publish(error_msg)
 
 def main(args=None):

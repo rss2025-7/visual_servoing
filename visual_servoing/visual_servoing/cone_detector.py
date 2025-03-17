@@ -55,6 +55,8 @@ class ConeDetector(Node):
         bottomu = float(bbox[1][0] + bbox[0][0])//2
         conepx.u, conepx.v = bottomu, bottomv
 
+
+        self.cone_pub.publish(conepx)
          # img with bounding box
         bbox_top_left = bbox[0][0], bbox[0][1]
         bbox_bot_right = bbox[1][0], bbox[1][1]
