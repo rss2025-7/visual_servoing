@@ -21,22 +21,23 @@ from vs_msgs.msg import ConeLocation, ConeLocationPixel
 
 ######################################################
 ## DUMMY POINTS -- ENTER YOUR MEASUREMENTS HERE
-PTS_IMAGE_PLANE = [[393, 207],
-                   [369, 176],
-                   [176, 177],
-                   [331, 151]] # dummy points
+PTS_IMAGE_PLANE = [[226, 185], # cone left
+                   [260, 185], # cone right
+                   [399, 194], # brick left
+                   [287, 223], # controller right
+                   [225, 222]] # controller left
 ######################################################
-
 # PTS_GROUND_PLANE units are in inches
 # car looks along positive x axis with positive y axis to left
 
 ######################################################
 ## DUMMY POINTS -- ENTER YOUR MEASUREMENTS HERE
 FRONT_BUMPER_TO_BACK_AXLE = 42 # in cm
-PTS_GROUND_PLANE = [[69+FRONT_BUMPER_TO_BACK_AXLE, -14.75], # doorstop
-                    [99.5+FRONT_BUMPER_TO_BACK_AXLE, -13], # swiffer
-                    [144+FRONT_BUMPER_TO_BACK_AXLE, 68.5], # battery
-                    [227.6+FRONT_BUMPER_TO_BACK_AXLE, -8.5]] # green
+PTS_GROUND_PLANE = [[114+FRONT_BUMPER_TO_BACK_AXLE, 41.5], # cone left
+                    [114+FRONT_BUMPER_TO_BACK_AXLE, 28.5], # cone right
+                    [95+FRONT_BUMPER_TO_BACK_AXLE, -20.5], # brick left
+                    [57.25+FRONT_BUMPER_TO_BACK_AXLE, 13], # controller right
+                    [57.7+FRONT_BUMPER_TO_BACK_AXLE, 26]] # controller left
 ######################################################
 
 METERS_PER_INCH = 0.0254
